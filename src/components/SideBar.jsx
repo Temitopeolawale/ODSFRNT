@@ -1,0 +1,63 @@
+"use client"
+
+import { ChevronLeft, ChevronRight, Plus, Upload, Camera } from "lucide-react"
+import SessionsList from "./SessionList"
+import ProfileSection from "./ProfileSection"
+import { useSession } from "../context/session-context"
+
+export default function Sidebar({ collapsed, setCollapsed, onUploadClick, showUpload }) {
+  const sessionContext = useSession()
+  
+  const handleNewSession = () => {
+    if (sessionContext?.createNewSession) {
+      sessionContext.createNewSession()
+    } else {
+      console.error("createNewSession function is not available in the session context")
+    }
+  }
+  
+  const handleToggleButton = () => {
+    onUploadClick()
+  }
+  
+  return (
+    <div className={`border-r bg-background flex flex-col h-screen transition-all duration-300 ${
+      collapsed ? "w-14" : "w-60"
+    }`}>
+      <div className="flex items-center p-4 border-b justify-between">
+        {!collapsed && <h1 className="text-xl font-semibold">VisionFlow</h1>}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="p-3 rounded-full hover:bg-muted transition-colors"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
+      </div>
+      
+      <div className="flex-1 overflow-auto">
+        <div className="p-3 space-y-4">
+          <button
+            onClick={handleNewSession}
+            className="flex items-center gap-2 w-full rounded-md p-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={16} />
+            {!collapsed && <span>New Session</span>}
+          </button>
+          
+          <button
+            onClick={handleToggleButton}
+            className="flex items-center gap-2 w-full rounded-md p-2 bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-colors"
+          >
+            {showUpload ? <Camera size={16} /> : <Upload size={16} />}
+            {!collapsed && <span>{showUpload ? "Camera" : "Upload Image"}</span>}
+          </button>
+        </div>
+        
+        <SessionsList collapsed={collapsed} />
+      </div>
+      
+      <ProfileSection collapsed={collapsed} />
+    </div>
+  )
+}
