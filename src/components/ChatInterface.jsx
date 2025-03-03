@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Send, AlertCircle } from "lucide-react"
 import { cn } from "../lib/utils"
 
-export default function ChatInterface({ messages, onSendMessage, isLoading, wsConnected }) {
+export default function ChatInterface({ messages = [], onSendMessage, isLoading, wsConnected }) {
   const [message, setMessage] = useState("")
   const messagesEndRef = useRef(null)
 
@@ -22,12 +22,13 @@ export default function ChatInterface({ messages, onSendMessage, isLoading, wsCo
   }
 
   const formatTime = (timestamp) => {
+    if (!timestamp) return ""
     const date = new Date(timestamp)
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
   return (
-    <div className="w-full max-w-xl h-[600px] flex flex-col border rounded-lg overflow-hidden bg-card">
+    <div className="w-full max-w-xl h-[600px] mt-20 flex flex-col border rounded-lg overflow-hidden bg-card">
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-medium">Conversation</h2>
         {!wsConnected && (
@@ -40,14 +41,14 @@ export default function ChatInterface({ messages, onSendMessage, isLoading, wsCo
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
-          {messages.length === 0 ? (
+          {!messages || messages.length === 0 ? (
             <div className="h-full flex items-center justify-center text-center text-muted-foreground">
               <p>No messages yet. Start a conversation!</p>
             </div>
           ) : (
             messages.map((msg) => (
               <div
-                key={msg.id}
+                key={msg.id || `msg-${Date.now()}-${Math.random()}`}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
@@ -112,7 +113,6 @@ export default function ChatInterface({ messages, onSendMessage, isLoading, wsCo
     </div>
   )
 }
-
 
 
 // import { useState, useEffect, useRef } from "react"

@@ -48,7 +48,7 @@ export default function CameraView({ onCapture }) {
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto">
       <div className="relative bg-card rounded-lg overflow-hidden shadow-lg">
         {error ? (
           <div className="p-8 text-center">
@@ -61,7 +61,7 @@ export default function CameraView({ onCapture }) {
             </button>
           </div>
         ) : capturedImage ? (
-          <div className="relative aspect-video">
+          <div className="relative aspect-[16/9]">
             <img src={capturedImage || "/placeholder.svg"} alt="Captured" className="w-full h-full object-cover" />
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
               <button
@@ -74,7 +74,7 @@ export default function CameraView({ onCapture }) {
             </div>
           </div>
         ) : (
-          <div className="relative aspect-video bg-black">
+          <div className="relative aspect-[16/9] bg-black md:aspect-[16/9] lg:aspect-[16/9]">
             {isInitializing && (
               <div className="absolute inset-0 flex items-center justify-center bg-black">
                 <div className="text-center text-white">
@@ -126,4 +126,3 @@ export default function CameraView({ onCapture }) {
     </div>
   )
 }
-

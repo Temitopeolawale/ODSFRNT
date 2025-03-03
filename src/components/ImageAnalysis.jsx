@@ -6,12 +6,13 @@ import CameraView from "../components/Camera"
 import AnalysisDisplay from "../components/AnalysisDisplay"
 import ChatInterface from "./ChatInterface"
 import { useTheme } from "../context/theme-context"
+import { useCaptureMode } from "../context/CaptureMode-context"
 
 export default function ImageAnalyzer() {
   const { theme } = useTheme()
-  
+  const { captureMode } = useCaptureMode()
   // Set camera as the default mode
-  const [captureMode, setCaptureMode] = useState("camera")
+  // const [captureMode, setCaptureMode] = useState("camera")
   const [image, setImage] = useState(null)
   const [imageUrl, setImageUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -58,14 +59,44 @@ export default function ImageAnalyzer() {
         // Process incoming message based on your backend's response format
         if (data.type === 'response' && data.content) {
           // Parse the content if it's a stringified JSON
-          const messageContent = typeof data.content === 'string' 
-            ? JSON.parse(data.content) // Parse if it's a string
-            : data.content
-
+          let messageContent;
+          
+          try {
+            // If content is a string that contains JSON, parse it
+            const parsedContent = typeof data.content === 'string' 
+              ? JSON.parse(data.content) 
+              : data.content;
+              
+            // If parsedContent is an object with content/history/threadId structure
+            if (typeof parsedContent === 'object' && parsedContent !== null) {
+              // Extract the actual text content - this is likely the message content
+              if (parsedContent.content) {
+                // If content itself is a string that looks like JSON, parse it again
+                messageContent = typeof parsedContent.content === 'string' && 
+                                parsedContent.content.startsWith('"') && 
+                                parsedContent.content.endsWith('"')
+                  ? JSON.parse(parsedContent.content)  // Remove extra quotes
+                  : parsedContent.content;
+              } else {
+                // Fallback to stringifying the object if no content property
+                messageContent = JSON.stringify(parsedContent);
+              }
+            } else {
+              // If parsedContent is already a string or other primitive
+              messageContent = parsedContent;
+            }
+          } catch (e) {
+            // If parsing fails, use the original content
+            console.error("Error parsing message content:", e);
+            messageContent = typeof data.content === 'string' 
+              ? data.content 
+              : JSON.stringify(data.content);
+          }
+    
           const newMessage = {
             id: Date.now(),
             role: "assistant",
-            content: messageContent,
+            content: messageContent, // Now contains string content
             timestamp: new Date().toISOString()
           }
           
@@ -120,19 +151,24 @@ export default function ImageAnalyzer() {
     }
   }, [threadId])
 
-  const handleImageSource = async (imageData, errorMessage) => {
+  const handleImageSource = async (imageData, errorMessage, previewUrl = null) => {
     setIsLoading(true)
     setError(null)
-
+  
     if (errorMessage) {
       setError(errorMessage)
       setIsLoading(false)
       return
     }
-
+  
     try {
-      // Set the image URL directly for display
-      setImage(imageData)
+      // If a preview URL was provided, use it for display
+      if (previewUrl) {
+        setImage(previewUrl)
+      } else {
+        // Otherwise, use the image data directly (for camera capture)
+        setImage(imageData)
+      }
       
       // Create FormData object to send to backend
       const formData = new FormData()
@@ -142,7 +178,7 @@ export default function ImageAnalyzer() {
         const blob = await fetch(imageData).then(res => res.blob())
         formData.append('image', blob, 'camera_capture.jpg')
       } else if (imageData instanceof Blob || imageData instanceof File) {
-        // If imageData is already a Blob or File object
+        // If imageData is already a Blob or File object (from upload)
         formData.append('image', imageData)
       }
       
@@ -158,11 +194,11 @@ export default function ImageAnalyzer() {
         },
         withCredentials: true,
       })
-
+  
       // Log the complete response to see its structure
       console.log("Backend response:", response.data)
-
-      // Handle response based on backend format shown in the example
+  
+      // Handle response based on backend format
       const data = response.data
       
       if (data.threadId) {
@@ -188,7 +224,6 @@ export default function ImageAnalyzer() {
           })
           
           // Extract objects from the message if needed
-          // This is still useful for the AnalysisDisplay component
           const extractedObjects = extractObjectsFromMessage(analysisMessage.content)
           if (extractedObjects.length > 0) {
             setDetectedObjects(extractedObjects)
@@ -304,7 +339,7 @@ export default function ImageAnalyzer() {
   }
 
   return (
-    <div className={`min-h-screen flex flex-col`}>
+   <div className={`min-h-screen flex flex-col`}>
       <main className="flex-1">
         {!image ? (
           <div className="flex-1 w-full flex flex-col items-center justify-center p-6">
@@ -315,7 +350,7 @@ export default function ImageAnalyzer() {
               </div>
             ) : (
               <ImageUpload 
-                onUpload={(img, err) => handleImageSource(img, err)}
+                onUpload={handleImageSource}
                 isLoading={isLoading}
                 error={error}/>
             )}
@@ -331,6 +366,16 @@ export default function ImageAnalyzer() {
                   objects={detectedObjects}
                   isLoading={isLoading} 
                 />
+                
+                {/* Moved the button here to be closer to the analysis display */}
+                <div className="mt-4">
+                  <button 
+                    onClick={resetAnalysis}
+                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                  >
+                    Capture New Image
+                  </button>
+                </div>
               </div>
               <div className="w-full md:w-1/2 p-4 overflow-hidden flex flex-col">
                 <ChatInterface
@@ -341,24 +386,12 @@ export default function ImageAnalyzer() {
                 />
               </div>
             </div>
-            <div className="p-4 flex justify-end">
-              <button 
-                onClick={resetAnalysis}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Capture New Image
-              </button>
-            </div>
-            
           </div>
         )}
       </main>
     </div>
   )
 }
-
-
-
 
 
 

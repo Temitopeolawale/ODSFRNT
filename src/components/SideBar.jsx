@@ -4,9 +4,11 @@ import { ChevronLeft, ChevronRight, Plus, Upload, Camera } from "lucide-react"
 import SessionsList from "./SessionList"
 import ProfileSection from "./ProfileSection"
 import { useSession } from "../context/session-context"
+import { useCaptureMode } from "../context/CaptureMode-context" // Import the context
 
-export default function Sidebar({ collapsed, setCollapsed, onUploadClick, showUpload }) {
+export default function Sidebar({ collapsed, setCollapsed }) {
   const sessionContext = useSession()
+  const { captureMode, setCaptureMode } = useCaptureMode() // Use the context
   
   const handleNewSession = () => {
     if (sessionContext?.createNewSession) {
@@ -16,9 +18,13 @@ export default function Sidebar({ collapsed, setCollapsed, onUploadClick, showUp
     }
   }
   
+  // Updated to toggle between "camera" and "upload" modes
   const handleToggleButton = () => {
-    onUploadClick()
+    setCaptureMode(captureMode === "camera" ? "upload" : "camera")
   }
+  
+  // Determine if we're showing upload or camera based on current captureMode
+  const showUpload = captureMode === "camera" // If in camera mode, show upload button (and vice versa)
   
   return (
     <div className={`border-r bg-background flex flex-col h-screen transition-all duration-300 ${
