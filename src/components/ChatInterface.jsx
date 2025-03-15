@@ -3,22 +3,34 @@
 import { useState, useEffect, useRef } from "react"
 import { Send, AlertCircle } from "lucide-react"
 import { cn } from "../lib/utils"
+import { useTheme } from "../context/theme-context" // Assuming this exists based on your second snippet
 
-export default function ChatInterface({ messages = [], onSendMessage, isLoading, wsConnected }) {
+export default function ChatInterface({ 
+  messages = [], 
+  onSendMessage, 
+  isLoading, 
+  wsConnected, 
+  readOnly = false 
+}) {
   const [message, setMessage] = useState("")
   const messagesEndRef = useRef(null)
-
+  const { theme } = useTheme() // From your second snippet
+  
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    scrollToBottom()
   }, [messages])
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!message.trim() || !wsConnected) return
-
-    onSendMessage(message)
-    setMessage("")
+    if (message.trim() && wsConnected && !readOnly) {
+      onSendMessage(message)
+      setMessage("")
+    }
   }
 
   const formatTime = (timestamp) => {
@@ -28,13 +40,13 @@ export default function ChatInterface({ messages = [], onSendMessage, isLoading,
   }
 
   return (
-    <div className="w-full max-w-xl h-[600px] mt-20 flex flex-col border rounded-lg overflow-hidden bg-card">
+    <div className="w-full max-w-xl h-[600px]  mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-medium">Conversation</h2>
-        {!wsConnected && (
-          <div className="flex items-center mt-2 text-sm text-destructive">
+        {!wsConnected && !readOnly && (
+          <div className="flex items-center mt-2 text-sm text-amber-500">
             <AlertCircle size={14} className="mr-1" />
-            <span>WebSocket disconnected</span>
+            <span>Connection lost. Trying to reconnect...</span>
           </div>
         )}
       </div>
@@ -46,9 +58,9 @@ export default function ChatInterface({ messages = [], onSendMessage, isLoading,
               <p>No messages yet. Start a conversation!</p>
             </div>
           ) : (
-            messages.map((msg) => (
+            messages.map((msg, index) => (
               <div
-                key={msg.id || `msg-${Date.now()}-${Math.random()}`}
+                key={msg.id || index}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
@@ -70,15 +82,15 @@ export default function ChatInterface({ messages = [], onSendMessage, isLoading,
 
           {isLoading && (
             <div className="flex justify-start">
-              <div className="max-w-[80%] px-4 py-2 rounded-lg bg-secondary text-secondary-foreground">
+              <div className="max-w-[80%] px-4 py-2 rounded-lg bg-muted">
                 <div className="flex space-x-1">
-                  <div className="w-2 h-2 rounded-full bg-current animate-bounce"></div>
+                  <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"></div>
                   <div
-                    className="w-2 h-2 rounded-full bg-current animate-bounce"
+                    className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"
                     style={{ animationDelay: "0.2s" }}
                   ></div>
                   <div
-                    className="w-2 h-2 rounded-full bg-current animate-bounce"
+                    className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"
                     style={{ animationDelay: "0.4s" }}
                   ></div>
                 </div>
@@ -91,29 +103,34 @@ export default function ChatInterface({ messages = [], onSendMessage, isLoading,
       </div>
 
       <div className="p-4 border-t border-border">
-        <form onSubmit={handleSubmit} className="flex space-x-2">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={wsConnected ? "Type your message..." : "Reconnecting..."}
-            disabled={!wsConnected || isLoading}
-            className="flex-1 px-3 py-2 bg-background border border-input rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          <button
-            type="submit"
-            disabled={!wsConnected || isLoading || !message.trim()}
-            className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send size={18} />
-            <span className="sr-only">Send message</span>
-          </button>
-        </form>
+        {readOnly ? (
+          <div className="text-sm text-muted-foreground text-center py-2">
+            This is a past session. You cannot send new messages.
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex space-x-2">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={wsConnected ? "Type your message..." : "Reconnecting..."}
+              disabled={!wsConnected || isLoading || readOnly}
+              className="flex-1 px-3 py-2 bg-background border border-input rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <button
+              type="submit"
+              disabled={!wsConnected || isLoading || !message.trim() || readOnly}
+              className="p-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send size={18} />
+              <span className="sr-only">Send message</span>
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )
 }
-
 
 // import { useState, useEffect, useRef } from "react"
 // import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../ui/Card"

@@ -2,7 +2,14 @@ import './App.css'
 import { useState, useEffect } from "react"
 import { SessionProvider } from "./context/session-context"
 import { ThemeProvider } from "./context/theme-context"
+import toast, { Toaster } from 'react-hot-toast';
+import LandingPage from './pages/LandingPage'
 import Layout from './pages/Layout'
+import SignUpForm from './components/SignUp'
+import OTPVerificationPage from './components/Otp';
+import Login from './components/Login';
+import SessionViewerPage from './pages/SessionviewerP';
+import { Route, Routes } from 'react-router-dom'
 function App() {
   const [isLoading, setIsLoading] = useState(true)
 
@@ -31,9 +38,19 @@ function App() {
 
   return (
     <>
+    <Toaster/>
     <ThemeProvider>
     <SessionProvider>
-    <Layout/>
+    <Routes>
+    <Route path='/' element={<LandingPage/>}/>
+    <Route path='/signup' element={<SignUpForm/>} />
+    <Route path='/verify-otp' element={<OTPVerificationPage/>} />
+    <Route path='/login' element={<Login/>} />
+    <Route path='/analysis' element={<Layout/>}/>
+    <Route path="/sessions/:threadId" element={<SessionViewerPage />}/>
+
+      </Routes>
+    
     </SessionProvider>
     </ThemeProvider>
     </>

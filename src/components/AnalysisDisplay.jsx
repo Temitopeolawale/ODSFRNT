@@ -40,7 +40,7 @@ export default function AnalysisDisplay({ image, results, objects, isLoading }) 
   }
 
   return (
-    <div className="w-full h-[600px] mt-20 flex flex-col border rounded-lg overflow-hidden bg-card">
+    <div className="w-full h-[600px]  mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
       <div className="p-4 border-b border-border flex justify-between items-center">
         <h2 className="text-lg font-medium">Image Analysis</h2>
         <div className="flex items-center space-x-2">

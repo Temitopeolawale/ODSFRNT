@@ -48,7 +48,7 @@ export default function CameraView({ onCapture }) {
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <div className="w-full max-w-4xl mx-auto  mt-20">
       <div className="relative bg-card rounded-lg overflow-hidden shadow-lg">
         {error ? (
           <div className="p-8 text-center">

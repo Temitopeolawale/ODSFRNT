@@ -1,93 +1,3 @@
-// import { useState, useRef } from "react"
-// import { Upload, AlertCircle } from "lucide-react"
-
-// export function ImageUpload({ onUpload, isLoading, error }) {
-//   const [dragActive, setDragActive] = useState(false)
-//   const inputRef = useRef(null)
-
-//   const handleDrag = (e) => {
-//     e.preventDefault()
-//     e.stopPropagation()
-
-//     if (e.type === "dragenter" || e.type === "dragover") {
-//       setDragActive(true)
-//     } else if (e.type === "dragleave") {
-//       setDragActive(false)
-//     }
-//   }
-
-//   const handleDrop = (e) => {
-//     e.preventDefault()
-//     e.stopPropagation()
-//     setDragActive(false)
-
-//     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-//       onUpload(e.dataTransfer.files[0])
-//     }
-//   }
-
-//   const handleChange = (e) => {
-//     e.preventDefault()
-
-//     if (e.target.files && e.target.files[0]) {
-//       onUpload(e.target.files[0])
-//     }
-//   }
-
-//   const handleClick = () => {
-//     inputRef.current.click()
-//   }
-
-//   return (
-//     <div className="w-full max-w-2xl mx-auto">
-//       <div
-//         className={`
-//           relative flex flex-col items-center justify-center w-full h-64 p-10
-//           border-2 border-dashed rounded-lg transition-colors
-//           ${dragActive ? "border-primary bg-primary/5" : "border-border"}
-//           ${isLoading ? "opacity-75 pointer-events-none" : "hover:bg-muted/50 cursor-pointer"}
-//         `}
-//         onDragEnter={handleDrag}
-//         onDragLeave={handleDrag}
-//         onDragOver={handleDrag}
-//         onDrop={handleDrop}
-//         onClick={handleClick}
-//       >
-//         <input
-//           ref={inputRef}
-//           type="file"
-//           className="hidden"
-//           accept="image/*"
-//           onChange={handleChange}
-//           disabled={isLoading}
-//         />
-
-//         <div className="flex flex-col items-center text-center">
-//           {isLoading ? (
-//             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary mb-6"></div>
-//           ) : (
-//             <div className="p-4 rounded-full bg-primary/10 mb-6">
-//               {error ? (
-//                 <AlertCircle className="h-12 w-12 text-destructive" />
-//               ) : (
-//                 <Upload className="h-12 w-12 text-primary" />
-//               )}
-//             </div>
-//           )}
-
-//           <h3 className="text-xl font-medium mb-3">
-//             {isLoading ? "Analyzing image..." : error ? "Upload Error" : "Upload an image"}
-//           </h3>
-
-//           <p className="text-base text-muted-foreground mb-3">{error ? error : "Drag and drop or click to upload"}</p>
-
-//           <p className="text-sm text-muted-foreground">Supports: JPG, PNG, GIF (max 10MB)</p>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
-
 import { useState, useRef, useEffect } from "react"
 import { Upload, AlertCircle, Check, X } from "lucide-react"
 
@@ -188,7 +98,7 @@ export default function ImageUpload({ onUpload, isLoading, error }) {
   // If we have an uploaded image, show it with a loading overlay
   if (uploadedImage && (uploadStatus === "uploading" || isLoading)) {
     return (
-      <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
+      <div className="w-full max-w-2xl mx-auto flex flex-col items-center mt-20">
         <div className="w-full aspect-video bg-gray-100 rounded-lg overflow-hidden mb-4 relative">
           <img 
             src={uploadedImage} 
@@ -210,7 +120,7 @@ export default function ImageUpload({ onUpload, isLoading, error }) {
   // If there was an error, show the image with an error overlay
   if (uploadedImage && uploadStatus === "error") {
     return (
-      <div className="w-full max-w-2xl mx-auto flex flex-col items-center">
+      <div className="w-full max-w-2xl mx-auto flex flex-col items-center mt-20">
         <div className="w-full aspect-video bg-gray-100 rounded-lg overflow-hidden mb-4 relative">
           <img 
             src={uploadedImage} 
@@ -239,7 +149,7 @@ export default function ImageUpload({ onUpload, isLoading, error }) {
 
   // Default upload UI
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto mt-40  ml-40 mr-40">
       <div
         className={`
           relative flex flex-col items-center justify-center w-full h-64 p-10

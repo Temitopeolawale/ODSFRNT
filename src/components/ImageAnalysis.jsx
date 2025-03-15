@@ -7,54 +7,61 @@ import AnalysisDisplay from "../components/AnalysisDisplay"
 import ChatInterface from "./ChatInterface"
 import { useTheme } from "../context/theme-context"
 import { useCaptureMode } from "../context/CaptureMode-context"
+import { useSession } from "../context/session-context" // Import session context
 
 export default function ImageAnalyzer() {
   const { theme } = useTheme()
   const { captureMode } = useCaptureMode()
-  // Set camera as the default mode
-  // const [captureMode, setCaptureMode] = useState("camera")
+  const { 
+    currentSessionId, 
+    setCurrentSessionId, 
+    createNewSession, 
+    updateSessionObjects,
+    newSessionCreated,
+    acknowledgeNewSession
+  } = useSession() // Use session context
+  
   const [image, setImage] = useState(null)
   const [imageUrl, setImageUrl] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [threadId, setThreadId] = useState(null)
   const [analysisResults, setAnalysisResults] = useState(null)
   const [detectedObjects, setDetectedObjects] = useState([])
   const [messages, setMessages] = useState([])
   const [error, setError] = useState(null)
   const [wsConnected, setWsConnected] = useState(false)
   const wsRef = useRef(null)
+  const connectionAttempts = useRef(0)
+  const maxRetries = 5
 
   const API_URL = "http://localhost:2009/api/v1"
   const WS_URL = "ws://localhost:2009" // Adjust based on your WebSocket endpoint
 
-  // Load thread ID from localStorage on initial render
   useEffect(() => {
-    const savedThreadId = localStorage.getItem("ai-analyzer-thread-id")
-    if (savedThreadId) {
-      setThreadId(savedThreadId)
+    if (newSessionCreated) {
+      resetAnalysis();
+      acknowledgeNewSession(); // Reset the flag
     }
-  }, [])
-
-  // Connect to WebSocket when threadId changes
-  useEffect(() => {
-    if (!threadId) return
-
-    // Close existing connection if any
-    if (wsRef.current) {
-      wsRef.current.close()
-    }
-
-    // Connect to WebSocket server
-    const ws = new WebSocket(`${WS_URL}?threadId=${threadId}`)
-
+  }, [newSessionCreated, acknowledgeNewSession]);
+  
+  // Function to establish WebSocket connection
+  const establishWebSocketConnection = () => {
+    // Don't attempt connection if we don't have a session ID
+    if (!currentSessionId) return null;
+    
+    console.log(`Establishing WebSocket connection for thread: ${currentSessionId}`);
+    
+    // Create new WebSocket connection
+    const ws = new WebSocket(`${WS_URL}?threadId=${currentSessionId}`);
+    
     ws.onopen = () => {
-      console.log("WebSocket connection established")
-      setWsConnected(true)
-    }
+      console.log("WebSocket connection established");
+      setWsConnected(true);
+      connectionAttempts.current = 0; // Reset connection attempts on successful connection
+    };
 
     ws.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data)
+        const data = JSON.parse(event.data);
         
         // Process incoming message based on your backend's response format
         if (data.type === 'response' && data.content) {
@@ -98,94 +105,130 @@ export default function ImageAnalyzer() {
             role: "assistant",
             content: messageContent, // Now contains string content
             timestamp: new Date().toISOString()
-          }
+          };
           
-          setMessages(prev => [...prev, newMessage])
-          setIsLoading(false)
+          setMessages(prev => [...prev, newMessage]);
+          setIsLoading(false);
         } else if (data.type === 'status') {
           // Handle status updates to show loading state
-          console.log("Status update:", data.content)
+          console.log("Status update:", data.content);
           // Only show loading if we're in a state that indicates processing
-          setIsLoading(['queued', 'in_progress'].includes(data.content))
+          setIsLoading(['queued', 'in_progress'].includes(data.content));
         } else if (data.type === 'error') {
-          setError(data.content || "An error occurred")
-          setIsLoading(false)
+          setError(data.content || "An error occurred");
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("Error processing WebSocket message:", error)
-        setIsLoading(false)
+        console.error("Error processing WebSocket message:", error);
+        setIsLoading(false);
       }
-    }
+    };
 
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
-      setWsConnected(false)
-      setError("Connection error. Please refresh the page.")
-      setIsLoading(false)
-    }
+      console.error("WebSocket error:", error);
+      setWsConnected(false);
+      setError("Connection error. Please refresh the page.");
+      setIsLoading(false);
+    };
 
-    ws.onclose = () => {
-      console.log("WebSocket connection closed")
-      setWsConnected(false)
+    ws.onclose = (event) => {
+      console.log(`WebSocket connection closed. Code: ${event.code}, Reason: ${event.reason}`);
+      setWsConnected(false);
       
-      // Attempt to reconnect after a delay
-      setTimeout(() => {
-        if (threadId) {
-          console.log("Attempting to reconnect WebSocket...")
-          // Only attempt to reconnect if component is still mounted
-          // This will trigger the useEffect again
-          setThreadId(prevId => {
-            if (prevId) return prevId; // Keep the same ID to trigger the effect
-            return null;
-          });
+      // Attempt to reconnect after a delay if not intentionally closed
+      if (event.code !== 1000) { // 1000 is normal closure
+        if (connectionAttempts.current < maxRetries) {
+          const delay = Math.min(1000 * (2 ** connectionAttempts.current), 30000); // Exponential backoff with 30s max
+          connectionAttempts.current++;
+          
+          console.log(`Attempting to reconnect (${connectionAttempts.current}/${maxRetries}) in ${delay}ms...`);
+          
+          setTimeout(() => {
+            if (currentSessionId) {
+              const newWs = establishWebSocketConnection();
+              if (newWs) wsRef.current = newWs;
+            }
+          }, delay);
+        } else {
+          console.error(`Maximum reconnection attempts (${maxRetries}) reached.`);
+          setError("Connection lost. Please refresh the page to reconnect.");
         }
-      }, 5000);
+      }
+    };
+    
+    return ws;
+  };
+  
+  // Connect to WebSocket when currentSessionId changes
+  useEffect(() => {
+    // Close existing connection if any
+    if (wsRef.current) {
+      wsRef.current.close(1000, "Intentional closure due to session change");
+      wsRef.current = null;
     }
 
-    wsRef.current = ws
+    // Don't attempt to connect if we don't have a session ID
+    if (!currentSessionId) {
+      setWsConnected(false);
+      return;
+    }
+    
+    // Establish a new connection
+    const ws = establishWebSocketConnection();
+    wsRef.current = ws;
 
+    // Cleanup function
     return () => {
       if (wsRef.current) {
-        wsRef.current.close()
+        wsRef.current.close(1000, "Component unmounting");
+        wsRef.current = null;
       }
-    }
-  }, [threadId])
+    };
+  }, [currentSessionId]);
 
   const handleImageSource = async (imageData, errorMessage, previewUrl = null) => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
   
     if (errorMessage) {
-      setError(errorMessage)
-      setIsLoading(false)
-      return
+      setError(errorMessage);
+      setIsLoading(false);
+      return;
     }
   
     try {
       // If a preview URL was provided, use it for display
       if (previewUrl) {
-        setImage(previewUrl)
+        setImage(previewUrl);
       } else {
         // Otherwise, use the image data directly (for camera capture)
-        setImage(imageData)
+        setImage(imageData);
       }
       
       // Create FormData object to send to backend
-      const formData = new FormData()
+      const formData = new FormData();
       
       // Convert base64/dataURL to blob if necessary (for camera captures)
       if (typeof imageData === 'string' && imageData.startsWith('data:')) {
-        const blob = await fetch(imageData).then(res => res.blob())
-        formData.append('image', blob, 'camera_capture.jpg')
+        const blob = await fetch(imageData).then(res => res.blob());
+        formData.append('image', blob, 'camera_capture.jpg');
       } else if (imageData instanceof Blob || imageData instanceof File) {
         // If imageData is already a Blob or File object (from upload)
-        formData.append('image', imageData)
+        formData.append('image', imageData);
       }
       
-      // Add thread ID if we have one
-      if (threadId) {
-        formData.append('threadId', threadId)
+      // Check if we have an existing session, if not create one
+      let threadIdToUse = currentSessionId;
+      if (!threadIdToUse) {
+        // Create a new session through the session context
+        threadIdToUse = await createNewSession();
+        if (!threadIdToUse) {
+          throw new Error("Failed to create a new session");
+        }
       }
+      
+      // Add thread ID to the form data
+      formData.append('threadID', threadIdToUse);
       
       // Send the form data to your backend
       const response = await axios.post(`${API_URL}/analyse/analysingImage`, formData, {
@@ -193,47 +236,48 @@ export default function ImageAnalyzer() {
           'Content-Type': 'multipart/form-data',
         },
         withCredentials: true,
-      })
+      });
   
       // Log the complete response to see its structure
-      console.log("Backend response:", response.data)
+      console.log("Backend response:", response.data);
   
       // Handle response based on backend format
-      const data = response.data
+      const data = response.data;
       
-      if (data.threadId) {
-        setThreadId(data.threadId)
-        localStorage.setItem("ai-analyzer-thread-id", data.threadId)
+      if (data.threadId && data.threadId !== currentSessionId) {
+        setCurrentSessionId(data.threadId);
       }
       
       if (data.url) {
-        setImageUrl(data.url)
+        setImageUrl(data.url);
       }
       
       // Process any backend analysis data for the analysis display
       if (data.data && Array.isArray(data.data)) {
         // Find the assistant message that contains the analysis
-        const assistantMessages = data.data.filter(msg => msg.role === "assistant")
+        const assistantMessages = data.data.filter(msg => msg.role === "assistant");
         if (assistantMessages.length > 0) {
-          const analysisMessage = assistantMessages[0]
+          const analysisMessage = assistantMessages[0];
           
           // Set the analysis results with the assistant's message
           setAnalysisResults({
             description: analysisMessage.content,
             timestamp: new Date(analysisMessage.created_at * 1000).toISOString()
-          })
+          });
           
           // Extract objects from the message if needed
-          const extractedObjects = extractObjectsFromMessage(analysisMessage.content)
+          const extractedObjects = extractObjectsFromMessage(analysisMessage.content);
           if (extractedObjects.length > 0) {
-            setDetectedObjects(extractedObjects)
+            setDetectedObjects(extractedObjects);
+            
+            // Update session context with detected objects
+            updateSessionObjects(threadIdToUse, extractedObjects);
           }
         }
       }
       
       // Add initial welcome messages to the chat interface
-      // These are hardcoded messages to match the UI example
-      const currentTime = new Date().toISOString()
+      const currentTime = new Date().toISOString();
       const welcomeMessages = [
         {
           id: Date.now(),
@@ -241,57 +285,56 @@ export default function ImageAnalyzer() {
           content: "I'm ready to analyze your image. Ask me questions about what I see!",
           timestamp: currentTime
         },
-        // {
-        //   id: Date.now() + 1,
-        //   role: "assistant",
-        //   content: `Analysis complete! I've detected ${detectedObjects.length || "several"} objects in your image.`,
-        //   timestamp: new Date(Date.now() + 1000).toISOString() // 1 second later
-        // }
-      ]
+      ];
       
-      setMessages(welcomeMessages)
+      setMessages(welcomeMessages);
+      
+      // Ensure WebSocket connection is established after successful image analysis
+      if (!wsConnected && currentSessionId) {
+        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+          console.log("Establishing WebSocket connection after image analysis");
+          const ws = establishWebSocketConnection();
+          if (ws) wsRef.current = ws;
+        }
+      }
       
     } catch (err) {
-      console.error("Error analyzing image:", err)
-      setError(err.response?.data?.message || "Failed to analyze image. Please try again.")
+      console.error("Error analyzing image:", err);
+      setError(err.response?.data?.message || "Failed to analyze image. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
   
   // Helper function to extract objects from the message text
-  // This is still useful for the AnalysisDisplay component
   const extractObjectsFromMessage = (messageText) => {
-    const objects = []
-    let objectId = 1
+    const objects = [];
+    let objectId = 1;
     
     // For UML diagrams, we can extract the classes/components mentioned
-    const classRegex = /\*\*(.*?)\*\*/g
-    let match
+    const classRegex = /\*\*(.*?)\*\*/g;
+    let match;
     
     while ((match = classRegex.exec(messageText)) !== null) {
-      const className = match[1].trim()
+      const className = match[1].trim();
       
       // Skip if it's not actually a class name (e.g., "Purpose", "Attributes", etc.)
-      const skipWords = ["Purpose", "Attributes", "Methods", "Attributes and Methods"]
+      const skipWords = ["Purpose", "Attributes", "Methods", "Attributes and Methods"];
       if (!skipWords.includes(className) && !objects.some(obj => obj.name === className)) {
         objects.push({
           id: objectId++,
           name: className,
           type: "Class/Component",
           confidence: 1.0 // High confidence since these are explicitly mentioned
-        })
+        });
       }
     }
     
-    return objects
-  }
+    return objects;
+  };
 
   const sendMessage = async (message) => {
-    if (!message.trim() || !threadId) return
-
-    // Set loading state while waiting for response
-    setIsLoading(true)
+    if (!message.trim() || !currentSessionId) return;
 
     // Create new message locally
     const newMessage = {
@@ -299,44 +342,76 @@ export default function ImageAnalyzer() {
       role: "user",
       content: message,
       timestamp: new Date().toISOString(),
-    }
+    };
 
     // Add message to local state
-    setMessages(prev => [...prev, newMessage])
+    setMessages(prev => [...prev, newMessage]);
+    
+    // Set loading state while waiting for response
+    setIsLoading(true);
     
     try {
-      // Send message via WebSocket instead of REST API
-      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({
-          threadId: threadId,
-          message: message
-        }))
-      } else {
-        throw new Error("WebSocket connection not available")
+      // Check if WebSocket is connected first
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+        // Try to establish connection if it doesn't exist or isn't open
+        console.log("WebSocket not connected. Attempting to establish connection...");
+        const ws = establishWebSocketConnection();
+        
+        if (!ws) {
+          throw new Error("Failed to establish WebSocket connection");
+        }
+        
+        wsRef.current = ws;
+        
+        // Wait for connection to open with timeout
+        await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error("WebSocket connection timeout"));
+          }, 5000);
+          
+          ws.addEventListener('open', () => {
+            clearTimeout(timeout);
+            resolve();
+          }, { once: true });
+          
+          ws.addEventListener('error', () => {
+            clearTimeout(timeout);
+            reject(new Error("WebSocket connection failed"));
+          }, { once: true });
+        });
       }
+      
+      // Now we can be sure the connection is open
+      wsRef.current.send(JSON.stringify({
+        threadId: currentSessionId,
+        message: message,
+        messageId: newMessage.id
+      }));
+
+      console.log('Message sent to WebSocket:', message);
       
       // Response will be handled by the WebSocket onmessage handler
       
     } catch (err) {
-      console.error("Error sending message:", err)
-      setError("Failed to send message. Please try again.")
-      setIsLoading(false)
+      console.error("Error sending message:", err);
+      setError("Failed to send message. Please try again.");
+      setIsLoading(false);
       
       // Remove the message from the UI if it failed to send
-      setMessages(prev => prev.filter(msg => msg.id !== newMessage.id))
+      setMessages(prev => prev.filter(msg => msg.id !== newMessage.id));
     }
-  }
+  };
 
   // Reset the analysis to capture a new image
   const resetAnalysis = () => {
-    setImage(null)
-    setImageUrl(null)
-    setAnalysisResults(null)
-    setDetectedObjects([])
-    setMessages([]) // Clear messages when resetting
-    setError(null)
-    // Keep threadId for conversation continuity if needed
-  }
+    setImage(null);
+    setImageUrl(null);
+    setAnalysisResults(null);
+    setDetectedObjects([]);
+    setMessages([]); // Clear messages when resetting
+    setError(null);
+    // Keep threadId for conversation continuity
+  };
 
   return (
    <div className={`min-h-screen flex flex-col`}>
@@ -382,7 +457,8 @@ export default function ImageAnalyzer() {
                   messages={messages}
                   onSendMessage={sendMessage}
                   isLoading={isLoading}
-                  wsConnected={wsConnected || !!threadId} // Consider thread existence as "connected"
+                  wsConnected={wsConnected}
+                  connectionError={!wsConnected && currentSessionId ? "WebSocket disconnected. Trying to reconnect..." : null}
                 />
               </div>
             </div>
@@ -390,10 +466,8 @@ export default function ImageAnalyzer() {
         )}
       </main>
     </div>
-  )
+  );
 }
-
-
 
 
 

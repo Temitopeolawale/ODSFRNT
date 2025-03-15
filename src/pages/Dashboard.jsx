@@ -66,15 +66,15 @@ export default function MainContent({ sidebarCollapsed, showUpload, setShowUploa
       setIsLoading(false)
     }
   }
-  // overflow scrolling.
+  
   return (
-    <main className="flex flex-col h-screen overflow-hidden">
-      <div className="flex justify-end items-center p-4 border-b">
+    <main className="flex flex-col h-screen w-full overflow-hidden">
+      <div className="flex justify-end items-center p-4 border-b w-full">
         <ThemeToggle />
       </div>
 
       {showUpload ? (
-        <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-6 overflow-hidden w-full">
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" style={{ marginLeft: sidebarCollapsed ? '7px' : '30px' }}>
             <ImageUpload
               onUpload={handleImageUpload}
@@ -84,11 +84,11 @@ export default function MainContent({ sidebarCollapsed, showUpload, setShowUploa
           </div>
         </div>
       ) : !showChat ? (
-        <div className="flex-1 flex items-center justify-center p-6 overflow-hidden">
+        <div className="flex-1 flex items-center justify-center p-6 overflow-hidden w-full">
           <ImageAnalyzer />
         </div>
       ) : (
-        <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden">
+        <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 overflow-hidden w-full">
           <div className="flex flex-col max-h-[calc(100vh-120px)] overflow-hidden">
             <div className="relative rounded-lg overflow-hidden shadow-md">
               <img

@@ -79,3 +79,111 @@
   }
 }
 
+/* Markdown content styling */
+.markdown-content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
+/* Style headings */
+.markdown-content h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content h3, .markdown-content h4, .markdown-content h5, .markdown-content h6 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Style paragraphs */
+.markdown-content p {
+  margin-bottom: 0.75rem;
+}
+
+/* Style lists */
+.markdown-content ul, .markdown-content ol {
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-content li {
+  margin-bottom: 0.25rem;
+}
+
+/* Style code blocks and inline code */
+.markdown-content pre {
+  background-color: #f0f0f0;
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+.markdown-content code {
+  background-color: #f0f0f0;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+/* Style links */
+.markdown-content a {
+  color: #3182ce;
+  text-decoration: underline;
+}
+
+.markdown-content a:hover {
+  color: #2c5282;
+}
+
+/* Style blockquotes */
+.markdown-content blockquote {
+  border-left: 4px solid #e2e8f0;
+  padding-left: 1rem;
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+
+/* Style tables */
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.markdown-content th, .markdown-content td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem;
+}
+
+.markdown-content th {
+  background-color: #f7fafc;
+}
+
+/* Style horizontal rules */
+.markdown-content hr {
+  border: 0;
+  border-top: 1px solid #e2e8f0;
+  margin: 1rem 0;
+}
+
+/* Handle embedded images */
+.markdown-content img {
+  max-width: 100%;
+  border-radius: 0.25rem;
+}
+

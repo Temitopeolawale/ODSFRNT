@@ -1,22 +1,42 @@
 "use client"
 
 import { ChevronLeft, ChevronRight, Plus, Upload, Camera } from "lucide-react"
+import { useNavigate, useLocation } from "react-router-dom"
 import SessionsList from "./SessionList"
 import ProfileSection from "./ProfileSection"
 import { useSession } from "../context/session-context"
-import { useCaptureMode } from "../context/CaptureMode-context" // Import the context
+import { useCaptureMode } from "../context/CaptureMode-context"
 
 export default function Sidebar({ collapsed, setCollapsed }) {
   const sessionContext = useSession()
-  const { captureMode, setCaptureMode } = useCaptureMode() // Use the context
+  const { captureMode, setCaptureMode } = useCaptureMode()
+  const navigate = useNavigate()
+  const location = useLocation()
   
-  const handleNewSession = () => {
-    if (sessionContext?.createNewSession) {
-      sessionContext.createNewSession()
-    } else {
-      console.error("createNewSession function is not available in the session context")
+  const handleNewSession = async () => {
+  const isSessionViewerPage = location.pathname.startsWith("/sessions/")
+  
+  if (isSessionViewerPage) {
+    navigate('/analysis')
+  } else {
+    try {
+      if (sessionContext?.createNewSession) {
+        await sessionContext.createNewSession()
+      } else {
+        console.error("createNewSession function is not available")
+      }
+    } catch (error) {
+      // If there's a 409 error, the session context should handle it
+      // but we can add additional error handling here if needed
+      console.error("Error creating new session:", error)
+      
+      // We could automatically redirect to the active session if we know its ID
+      if (error.response?.status === 409 && error.response?.data?.existingThreadId) {
+        sessionContext.setCurrentSessionId(error.response.data.existingThreadId)
+      }
     }
   }
+}
   
   // Updated to toggle between "camera" and "upload" modes
   const handleToggleButton = () => {
