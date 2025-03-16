@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from "react"
-import { Mail, Lock } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff } from "lucide-react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -12,6 +12,7 @@ export default function SignUpForm() {
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ text: "", type: "" })
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -58,12 +59,16 @@ export default function SignUpForm() {
     }
   }
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword)
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <div className="w-full max-w-md px-4">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold mb-1">Hello!</h1>
-          <p className="text-xl">Sign Up to Get Started</p>
+          <h1 className="text-3xl font-bold mb-1 text-black">Hello!</h1>
+          <p className="text-xl text-black">Sign Up to Get Started</p>
         </div>
         {message.text && (
           <div className={`mb-4 p-3 rounded-md text-center ${
@@ -84,7 +89,7 @@ export default function SignUpForm() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full py-3 pl-10 pr-3 bg-gray-100 rounded-md focus:outline-none"
+              className="w-full py-3 pl-10 pr-3 bg-gray-100 rounded-md focus:outline-none text-black"
             />
           </div>
           <div className="relative">
@@ -92,14 +97,21 @@ export default function SignUpForm() {
               <Lock size={20} />
             </div>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
               required
-              className="w-full py-3 pl-10 pr-3 bg-gray-100 rounded-md focus:outline-none"
+              className="w-full py-3 pl-10 pr-10 bg-gray-100 rounded-md focus:outline-none text-black"
             />
+            <button
+              type="button"
+              onClick={togglePasswordVisibility}
+              className="absolute inset-y-0 right-3 flex items-center text-black hover:text-gray-800"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
           <button
             type="submit"
