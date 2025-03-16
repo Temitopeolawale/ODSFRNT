@@ -73,6 +73,9 @@ export default function LandingPage() {
     const handleGetStartedClick = () => {
       navigate("/signup");
     };
+    const handleSignUp = ()=>{
+      navigate("/login")
+    }
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-gray-50 to-white text-gray-900">
@@ -324,8 +327,10 @@ export default function LandingPage() {
                   >
                     Get Started Now <ChevronRight className="h-4 w-4" />
                   </Button>
-                  <Button size="lg" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
-                    Schedule a Demo
+                  <Button size="lg" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                    onClick={handleSignUp}  
+                  >
+                    Sign in 
                   </Button>
                 </div>
               </div>

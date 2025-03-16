@@ -1,141 +1,174 @@
-import React, { useState } from 'react'
+"use client"
+
+import { useState } from "react"
+import { Eye, EyeOff, Mail, Lock } from "lucide-react"
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import { saveToken, SetAuthHeader } from '../Service/auth'
 
-function Login() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
-    const navigate = useNavigate()
-    //end point for login
-    const API_URL = "http://localhost:2009/api/v1"
-    
-    // handling the form 
-    const handleSubmit = async(e) => {
-        e.preventDefault()
-        try {
-            const response = await axios.post(`${API_URL}/user/login`, {
-                email,
-                password
-            })
-            
-            // Add console log to debug token
-            console.log("Login response:", response.data)
-            const token = response.data.data.token
-            
-            
-            // handling the responses 
-            if(response.status === 200){
-                // First save the token
-                saveToken(token)
-                
-                // Then set the auth header (this function will get the token from localStorage)
-                SetAuthHeader()
-                
-                toast.success("Login Successful")
-                navigate("/analysis")
-            }
-        } catch (error) {
-            console.error("Login error:", error)
-            if(error.response?.status === 401){
-                toast.error("Invalid Username or Password")
-            }
-            else if (error.response?.status === 400){
-                toast.error("Verify your OTP")
-            } else {
-                toast.error("Login failed. Please try again.")
-            }
+export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [errors, setErrors] = useState({})
+  const navigate = useNavigate()
+  
+  // API endpoint
+  const API_URL = "http://localhost:2009/api/v1"
+
+  const validateForm = () => {
+    const newErrors = {}
+    if (!email) newErrors.email = "Email is required"
+    if (!password) newErrors.password = "Password is required"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+  const handleSignUp = () => {
+    navigate("/signup");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (validateForm()) {
+      try {
+        const response = await axios.post(`${API_URL}/user/login`, {
+          email,
+          password
+        })
+        
+        console.log("Login response:", response.data)
+        const token = response.data.data.token
+        
+        if(response.status === 200){
+          saveToken(token)
+          SetAuthHeader()
+          toast.success("Login Successful")
+          navigate("/analysis")
+          console.log("Login successful, would navigate to /analysis")
         }
+      } catch (error) {
+        console.error("Login error:", error)
+        if(error.response?.status === 401){
+          toast.error("Invalid Username or Password")
+        }
+        else if (error.response?.status === 400){
+          toast.error("Verify your OTP")
+        } else {
+          toast.error("Login failed. Please try again.")
+        }
+      }
     }
+  }
 
-    // Toggle password visibility
-    const togglePasswordVisibility = () => {
-        setShowPassword(!showPassword)
-    }
+  return (
+    <div className="min-h-screen bg-white flex flex-col justify-center items-center">
+      <div className="w-full max-w-md px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 mb-2">Welcome back</h1>
+          <p className="text-gray-500">Sign in to your account to continue</p>
+        </div>
 
-    return (
-        <>
-            <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-                <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-black">
-                        Log in to your account
-                    </h2>
-                </div>
-
-                <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                    <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-200">
-                        <form className="space-y-6" onSubmit={handleSubmit}>
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Email address
-                                </label>
-                                <div className="mt-1">
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        required
-                                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-black focus:border-black sm:text-sm"
-                                        placeholder="you@example.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                    Password
-                                </label>
-                                <div className="mt-1 relative">
-                                    <input
-                                        id="password"
-                                        name="password"
-                                        type={showPassword ? "text" : "password"}
-                                        autoComplete="current-password"
-                                        required
-                                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-black focus:border-black sm:text-sm"
-                                        placeholder="••••••••"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={togglePasswordVisibility}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
-                                    >
-                                        {showPassword ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            </svg>
-                                        )}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div>
-                                <button
-                                    type="submit"
-                                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                                >
-                                    Log in
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div className="w-full h-1 bg-black fixed bottom-0"></div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Mail className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`block w-full pl-10 pr-3 py-2 border ${
+                  errors.email ? "border-red-500" : "border-gray-300"
+                } rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-black`}
+                placeholder="you@example.com"
+              />
             </div>
-        </>
-    )
-}
+            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+          </div>
 
-export default Login
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Lock className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`block w-full pl-10 pr-10 py-2 border ${
+                  errors.password ? "border-red-500" : "border-gray-300"
+                } rounded-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black text-black`}
+                placeholder="••••••"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400" />
+                )}
+              </button>
+            </div>
+            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+              />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                Remember me
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <a href="#" className="font-medium text-gray-700 hover:text-black">
+                Forgot password?
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors"
+            >
+              Sign in
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
+            Don't have an account?
+            
+             <button onClick={handleSignUp} className="font-medium text-black hover:text-indigo-600">Sign up instead</button>
+          </p>
+        </div>
+
+        <div className="mt-8 border-t border-gray-300"></div>
+      </div>
+    </div>
+  )
+}

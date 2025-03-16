@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, Plus, Upload, Camera } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, Upload, Camera , Zap} from "lucide-react"
 import { useNavigate, useLocation } from "react-router-dom"
 import SessionsList from "./SessionList"
 import ProfileSection from "./ProfileSection"
@@ -51,7 +51,12 @@ export default function Sidebar({ collapsed, setCollapsed }) {
       collapsed ? "w-14" : "w-60"
     }`}>
       <div className="flex items-center p-4 border-b justify-between">
-        {!collapsed && <h1 className="text-xl font-semibold">VisionFlow</h1>}
+        {!collapsed && (
+          <div className="flex items-center">
+            <Zap className="h-6 w-6 text-purple-600" />
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">VisionFlow</span>
+          </div>
+        )}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="p-3 rounded-full hover:bg-muted transition-colors"

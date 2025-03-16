@@ -40,7 +40,7 @@ export default function ChatInterface({
   }
 
   return (
-    <div className="w-full max-w-xl h-[600px]  mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
+    <div className="w-full  h-[600px]  mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-medium">Conversation</h2>
         {!wsConnected && !readOnly && (

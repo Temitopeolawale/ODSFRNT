@@ -104,66 +104,65 @@ export default function SessionViewer() {
             const url = data.messages[0].metadata.imageUrl;
             console.log("Found image URL:", url);
             setImageUrl(url);
-          }else {
-
-            console.log("No image URL found in the first message");
-          // Check for image in messages first
-          const messageWithImage = data.messages?.find(msg => 
-            msg.metadata && msg.metadata.imageUrl
-          );
-          
-          if (messageWithImage?.metadata?.imageUrl) {
-            console.log("Found image in message metadata:", messageWithImage.metadata.imageUrl);
-            setImageUrl(messageWithImage.metadata.imageUrl);
           } else {
-            // Then check detections
-            const detectionWithImage = data.detections?.find(det => det.imageUrl);
-            if (detectionWithImage?.imageUrl) {
-              console.log("Found image in detection:", detectionWithImage.imageUrl);
-              setImageUrl(detectionWithImage.imageUrl);
+            console.log("No image URL found in the first message");
+            // Check for image in messages first
+            const messageWithImage = data.messages?.find(msg => 
+              msg.metadata && msg.metadata.imageUrl
+            );
+            
+            if (messageWithImage?.metadata?.imageUrl) {
+              console.log("Found image in message metadata:", messageWithImage.metadata.imageUrl);
+              setImageUrl(messageWithImage.metadata.imageUrl);
             } else {
-              // Finally check timeline as last resort
-              const timelineItems = data.timeline || [];
-              const imageItem = timelineItems.find(item => {
-                if (item.type === 'detection' && item.data?.imageUrl) return true;
-                if (item.type === 'message' && item.data?.metadata?.imageUrl) return true;
-                return false;
-              });
-              
-              if (imageItem) {
-                const foundUrl = item.type === 'detection' 
-                  ? imageItem.data.imageUrl 
-                  : imageItem.data.metadata.imageUrl;
-                console.log("Found image in timeline:", foundUrl);
-                setImageUrl(foundUrl);
+              // Then check detections
+              const detectionWithImage = data.detections?.find(det => det.imageUrl);
+              if (detectionWithImage?.imageUrl) {
+                console.log("Found image in detection:", detectionWithImage.imageUrl);
+                setImageUrl(detectionWithImage.imageUrl);
               } else {
-                console.log("No image found in any data structure");
+                // Finally check timeline as last resort
+                const timelineItems = data.timeline || [];
+                const imageItem = timelineItems.find(item => {
+                  if (item.type === 'detection' && item.data?.imageUrl) return true;
+                  if (item.type === 'message' && item.data?.metadata?.imageUrl) return true;
+                  return false;
+                });
+                
+                if (imageItem) {
+                  const foundUrl = imageItem.type === 'detection' 
+                    ? imageItem.data.imageUrl 
+                    : imageItem.data.metadata.imageUrl;
+                  console.log("Found image in timeline:", foundUrl);
+                  setImageUrl(foundUrl);
+                } else {
+                  console.log("No image found in any data structure");
+                }
               }
             }
           }
-        }
         
-        // Extract detected objects more robustly
-        let objectsData = [];
-        
-        // Try different sources for objects data
-        if (data.detections) {
-          // First priority: detections array at top level
-          objectsData = data.detections
-            .filter(det => det.objects && Array.isArray(det.objects))
-            .flatMap(det => det.objects);
-        } else if (data.timeline) {
-          // Second priority: detections in timeline
-          objectsData = data.timeline
-            .filter(item => item.type === 'detection' && item.data?.objects && Array.isArray(item.data.objects))
-            .flatMap(item => item.data.objects);
+          // Extract detected objects more robustly
+          let objectsData = [];
+          
+          // Try different sources for objects data
+          if (data.detections) {
+            // First priority: detections array at top level
+            objectsData = data.detections
+              .filter(det => det.objects && Array.isArray(det.objects))
+              .flatMap(det => det.objects);
+          } else if (data.timeline) {
+            // Second priority: detections in timeline
+            objectsData = data.timeline
+              .filter(item => item.type === 'detection' && item.data?.objects && Array.isArray(item.data.objects))
+              .flatMap(item => item.data.objects);
+          }
+          
+          console.log("Extracted objects:", objectsData);
+          if (objectsData.length > 0) {
+            setDetectedObjects(objectsData);
+          }
         }
-        
-        console.log("Extracted objects:", objectsData);
-        if (objectsData.length > 0) {
-          setDetectedObjects(objectsData);
-        }
-      }
     } catch (error) {
       console.error("Error fetching session data:", error);
     }
@@ -182,19 +181,19 @@ export default function SessionViewer() {
     const firstAssistantMessage = currentSessionMessages.find(msg => msg.role === 'assistant');
     
     // Get image URL from the first message's metadata (regardless of role)
-    const firstMessageWithImage = currentSessionMessages[0];
-    const imageUrl = firstMessageWithImage?.metadata?.imageUrl;
+    const firstMessageWithImage = currentSessionMessages.find(msg => msg.metadata?.imageUrl);
+    const msgImageUrl = firstMessageWithImage?.metadata?.imageUrl;
     
-    // If we found an image URL and it's not already set in state, set it
-    if (imageUrl && !imageUrl) {
-      console.log("Setting image URL from first message:", imageUrl);
-      setImageUrl(imageUrl);
+    // If we found an image URL and the state imageUrl is still null, set it
+    if (msgImageUrl && !imageUrl) {
+      console.log("Setting image URL from message:", msgImageUrl);
+      setImageUrl(msgImageUrl);
     }
     
     if (!firstAssistantMessage) return null;
     
-    console.log("Current image URL:", imageUrl);
-    console.log("First message metadata:", firstMessageWithImage?.metadata);
+    console.log("Current image URL state:", imageUrl);
+    console.log("First message with image metadata:", firstMessageWithImage?.metadata);
     
     return {
       description: firstAssistantMessage.content,
@@ -202,6 +201,7 @@ export default function SessionViewer() {
       objects: detectedObjects
     };
   };
+
   // Handle sending a new message in the continued session
   const handleSendMessage = async (message) => {
     if (!threadId || !message || message.trim() === '') return;
@@ -235,13 +235,23 @@ export default function SessionViewer() {
     }
   };
 
-  return (
-    <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 mt-[-100px] overflow-hidden">
-      <div className="flex flex-col max-h-[calc(100vh-120px)] overflow-hidden">
+  // Update useEffect to check for image URL when messages change
+  useEffect(() => {
+    if (currentSessionMessages && currentSessionMessages.length > 0 && !imageUrl) {
+      // Try to find image URL in messages
+      const messageWithImage = currentSessionMessages.find(msg => msg.metadata?.imageUrl);
+      if (messageWithImage?.metadata?.imageUrl) {
+        console.log("Found image URL in messages update:", messageWithImage.metadata.imageUrl);
+        setImageUrl(messageWithImage.metadata.imageUrl);
+      }
+    }
+  }, [currentSessionMessages, imageUrl]);
 
+  return (
+    <div className="flex-1 p-6 grid grid-cols-1 md:grid-cols-2 gap-6 mt-[-60px] overflow-hidden">
+      <div className="flex flex-col max-h-[calc(100vh-120px)] overflow-hidden">
         <div className="flex-1 overflow-hidden">
-            {/* Log the image URL right before passing it to the component */}
-        {console.log("Rendering with imageUrl:", imageUrl)}
+          {console.log("Rendering with imageUrl:", imageUrl)}
           <AnalysisDisplay 
             image={imageUrl} 
             results={getAnalysisResults()} 
