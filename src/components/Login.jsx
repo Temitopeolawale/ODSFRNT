@@ -55,7 +55,7 @@ export default function LoginPage() {
           toast.error("Invalid Username or Password")
         }
         else if (error.response?.status === 400){
-          toast.error("Verify your OTP")
+          toast.error("Invalid Email or password ")
         } else {
           toast.error("Login failed. Please try again.")
         }

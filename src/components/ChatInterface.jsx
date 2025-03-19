@@ -1,20 +1,20 @@
-
-
 import { useState, useEffect, useRef } from "react"
 import { Send, AlertCircle } from "lucide-react"
 import { cn } from "../lib/utils"
-import { useTheme } from "../context/theme-context" // Assuming this exists based on your second snippet
+import { useTheme } from "../context/theme-context"
+import ReactMarkdown from "react-markdown"
 
 export default function ChatInterface({ 
   messages = [], 
   onSendMessage, 
   isLoading, 
   wsConnected, 
-  readOnly = false 
+  readOnly = false,
+  connectionError = null
 }) {
   const [message, setMessage] = useState("")
   const messagesEndRef = useRef(null)
-  const { theme } = useTheme() // From your second snippet
+  const { theme } = useTheme()
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -40,13 +40,13 @@ export default function ChatInterface({
   }
 
   return (
-    <div className="w-full  h-[600px]  mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
+    <div className="w-full h-[600px] mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
       <div className="p-4 border-b border-border">
         <h2 className="text-lg font-medium">Conversation</h2>
         {!wsConnected && !readOnly && (
           <div className="flex items-center mt-2 text-sm text-amber-500">
             <AlertCircle size={14} className="mr-1" />
-            <span>Connection lost. Trying to reconnect...</span>
+            <span>{connectionError || "Connection lost. Trying to reconnect..."}</span>
           </div>
         )}
       </div>
@@ -73,7 +73,13 @@ export default function ChatInterface({
                         : "bg-secondary text-secondary-foreground"
                   )}
                 >
-                  <p>{msg.content}</p>
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {typeof msg.content === 'string' ? (
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    ) : (
+                      <p>{String(msg.content)}</p>
+                    )}
+                  </div>
                   <p className="text-xs opacity-70 mt-1">{formatTime(msg.timestamp)}</p>
                 </div>
               </div>

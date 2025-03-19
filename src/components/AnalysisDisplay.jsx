@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Download, ZoomIn, ZoomOut } from "lucide-react"
+import ReactMarkdown from "react-markdown"
 
 export default function AnalysisDisplay({ image, results, objects, isLoading }) {
   const [zoomLevel, setZoomLevel] = useState(1)
@@ -40,7 +41,7 @@ export default function AnalysisDisplay({ image, results, objects, isLoading }) 
   }
 
   return (
-    <div className="w-full h-[600px]  mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
+    <div className="w-full h-[600px] mt-24 flex flex-col border rounded-lg overflow-hidden bg-card">
       <div className="p-4 border-b border-border flex justify-between items-center">
         <h2 className="text-lg font-medium">Image Analysis</h2>
         <div className="flex items-center space-x-2">
@@ -120,9 +121,11 @@ export default function AnalysisDisplay({ image, results, objects, isLoading }) 
       {results && !isLoading && (
         <div className="p-4 border-t border-border h-[200px] overflow-y-auto">
           <h3 className="text-sm font-medium mb-2">Detection Summary</h3>
-          <div className="text-sm">
+          <div className="text-sm markdown-content">
             {results.description && (
-              <p className="mb-2">{results.description}</p>
+              <div className="prose prose-sm dark:prose-invert max-w-none">
+                <ReactMarkdown>{results.description}</ReactMarkdown>
+              </div>
             )}
             
             {/* Handle both structures for objects */}
