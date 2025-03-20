@@ -14,7 +14,7 @@ export function SessionProvider({ children }) {
   const [newSessionCreated, setNewSessionCreated] = useState(false);
   const [currentSessionMessages, setCurrentSessionMessages] = useState([]);
 
-  const API_URL = "http://localhost:2009/api/v1";
+  const API_URL = "https://visionflow.up.railway.app/api/v1";
   
   // Load active session from localStorage on initial render
   useEffect(() => {

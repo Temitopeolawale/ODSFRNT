@@ -18,7 +18,7 @@ export default function ProfileSection({ collapsed }) {
   const { sessions } = useSession()
   const navigate = useNavigate()
 
-  const API_URl = "http://localhost:2009/api/v1";
+  const API_URl = "https://visionflow.up.railway.app/api/v1";
   useEffect(() => {
     const fetchUserProfile = async () => {
       setIsLoading(true)

@@ -16,7 +16,7 @@ export default function LoginPage() {
   const navigate = useNavigate()
   
   // API endpoint
-  const API_URL = "http://localhost:2009/api/v1"
+  const API_URL = "https://visionflow.up.railway.app/api/v1"
 
   const validateForm = () => {
     const newErrors = {}

@@ -21,7 +21,7 @@ const OTPVerificationPage = () => {
     }
   };
   
-  const API_URL = "http://localhost:2009/api/v1";
+  const API_URL = "https://visionflow.up.railway.app/api/v1";
 
   const handleSubmit = async (e) => {
     e.preventDefault();

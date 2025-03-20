@@ -14,7 +14,7 @@ export default function SignupPage() {
   const [message, setMessage] = useState({ text: "", type: "" })
   
   const navigate = useNavigate()
-  const API_URL = "http://localhost:2009/api/v1"
+  const API_URL = "https://visionflow.up.railway.app/api/v1"
 
   const handleSignIn = ()=>{
     navigate("/login")

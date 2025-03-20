@@ -6,7 +6,7 @@ import ChatInterface from "./ChatInterface";
 import axios from "axios";
 
 export default function SessionViewer() {
-  const API_URL = "http://localhost:2009/api/v1"
+  const API_URL = "https://visionflow.up.railway.app/api/v1"
   const { threadId } = useParams();
   const navigate = useNavigate();
   const { 
