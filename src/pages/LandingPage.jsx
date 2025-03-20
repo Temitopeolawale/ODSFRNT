@@ -168,8 +168,8 @@ export default function LandingPage() {
                 />
                 <FeatureCard
                   icon={Shield}
-                  title="Privacy-Focused"
-                  description="Your data is secure, with no unnecessary storage of personal images."
+                  title="Cross-Platform Support"
+                  description="Works smoothly on both desktop and mobile devices."
                 />
                 <FeatureCard
                   icon={Zap}

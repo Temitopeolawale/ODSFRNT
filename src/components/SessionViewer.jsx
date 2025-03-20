@@ -31,7 +31,7 @@ export default function SessionViewer() {
   useEffect(() => {
     if (threadId) {
       // Create WebSocket connection
-      const ws = new WebSocket('ws://localhost:2009'); // adjust the URL as needed
+      const ws = new WebSocket('wss://visionflow.up.railway.app'); // adjust the URL as needed
       
       ws.onopen = () => {
         console.log('WebSocket connected');

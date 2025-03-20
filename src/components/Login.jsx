@@ -143,7 +143,7 @@ export default function LoginPage() {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-gray-700 hover:text-black">
+              <a href="/forgot-pass" className="font-medium text-purple-600 hover:text-purple-500 flex items-center justify-center mx-auto">
                 Forgot password?
               </a>
             </div>
@@ -163,7 +163,7 @@ export default function LoginPage() {
           <p className="text-sm text-gray-600">
             Don't have an account?
             
-             <button onClick={handleSignUp} className="font-medium text-black hover:text-indigo-600">Sign up instead</button>
+             <button onClick={handleSignUp} className="font-medium text-purple-600 hover:text-purple-500 ">Sign up instead</button>
           </p>
         </div>
 

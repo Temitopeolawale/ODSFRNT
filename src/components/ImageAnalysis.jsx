@@ -34,7 +34,7 @@ export default function ImageAnalyzer() {
   const maxRetries = 5
 
   const API_URL = "https://visionflow.up.railway.app/api/v1"
-  const WS_URL = "ws://localhost:2009" // Adjust based on your WebSocket endpoint
+  const WS_URL = "wss://visionflow.up.railway.app" // Adjust based on your WebSocket endpoint
 
   useEffect(() => {
     if (newSessionCreated) {

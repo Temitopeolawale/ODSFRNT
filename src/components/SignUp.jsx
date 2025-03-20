@@ -130,7 +130,7 @@ export default function SignupPage() {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{" "}
-            <button  onClick={handleSignIn}  className="font-medium text-black hover:text-indigo-600">
+            <button  onClick={handleSignIn}  className="font-medium text-purple-600 hover:text-purple-500 ">
               Log in instead
             </button>
           </p>

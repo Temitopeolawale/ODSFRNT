@@ -52,7 +52,7 @@ const OTPVerificationPage = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center items-center px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 border border-gray-200">
-        <h2 className="text-3xl font-bold text-center text-black mb-4">
+        <h2 className="text-4xl font-bold  text-center bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600 mb-4">
           Verify OTP
         </h2>
         <p className="text-center text-gray-800 mb-6">
@@ -76,7 +76,7 @@ const OTPVerificationPage = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+            className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg "
           >
             Verify
           </button>

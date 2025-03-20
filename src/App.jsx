@@ -7,6 +7,8 @@ import LandingPage from './pages/LandingPage'
 import Layout from './pages/Layout'
 import SignUpForm from './components/SignUp'
 import OTPVerificationPage from './components/Otp';
+import ForgotPasswordPage from './components/ForgottenPassword';
+import ResetPasswordPage from './components/ResetPassword';
 import Login from './components/Login';
 import SessionViewerPage from './pages/SessionviewerP';
 import { Route, Routes } from 'react-router-dom'
@@ -46,6 +48,8 @@ function App() {
     <Route path='/signup' element={<SignUpForm/>} />
     <Route path='/verify-otp' element={<OTPVerificationPage/>} />
     <Route path='/login' element={<Login/>} />
+    <Route path='/forgot-pass' element={<ForgotPasswordPage/>} />
+    <Route path='/reset-pass' element={<ResetPasswordPage/>} />
     <Route path='/analysis' element={<Layout/>}/>
     <Route path="/sessions/:threadId" element={<SessionViewerPage />}/>
 
