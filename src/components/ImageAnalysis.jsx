@@ -488,7 +488,7 @@ export default function ImageAnalyzer() {
             )}
             
             {/* Main Content Container */}
-            <div className={`flex-1 ${isMobileView ? 'flex flex-col  mt-6' : 'grid grid-cols-1 md:grid-cols-2 gap-4'} p-2 sm:p-4`}>
+            <div className={`flex-1 ${isMobileView ? 'flex flex-col  mt-8' : 'grid grid-cols-1 md:grid-cols-2 gap-4'} p-2 sm:p-4`}>
               {/* Analysis Display */}
               <div 
                 className={`${isMobileView ? (activeTab === 'analysis' ? 'flex flex-col flex-1' : 'hidden') : 'flex flex-col'} overflow-auto`}
@@ -513,7 +513,7 @@ export default function ImageAnalyzer() {
               
               {/* Chat Interface */}
               <div 
-                className={`${isMobileView ? (activeTab === 'chat' ? 'flex flex-col flex-1' : 'hidden') : 'flex flex-col'} ${isMobileView ? 'max-h-[90vh]' : 'h-[calc(100vh-200px)]'} md:h-auto overflow-hidden`}
+                className={`${isMobileView ? (activeTab === 'chat' ? 'flex flex-col flex-1' : 'hidden') : 'flex flex-col'} ${isMobileView ? 'max-h-[80vh]' : 'h-[calc(100vh-200px)]'} md:h-auto overflow-hidden`}
               >
                 <ChatInterface
                   messages={messages}
