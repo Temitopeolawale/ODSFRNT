@@ -33,8 +33,28 @@ export default function ImageAnalyzer() {
   const connectionAttempts = useRef(0)
   const maxRetries = 5
 
+  // Responsive layout management
+  const [isMobileView, setIsMobileView] = useState(false)
+  const [activeTab, setActiveTab] = useState('analysis') // 'analysis' or 'chat'
+
   const API_URL = "https://visionflow.up.railway.app/api/v1"
   const WS_URL = "wss://visionflow.up.railway.app" // Adjust based on your WebSocket endpoint
+
+  // Check viewport size and update state
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Set initial value
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     if (newSessionCreated) {
@@ -109,6 +129,11 @@ export default function ImageAnalyzer() {
           
           setMessages(prev => [...prev, newMessage]);
           setIsLoading(false);
+          
+          // On mobile, automatically switch to chat tab when receiving a response
+          if (isMobileView) {
+            setActiveTab('chat');
+          }
         } else if (data.type === 'status') {
           // Handle status updates to show loading state
           console.log("Status update:", data.content);
@@ -351,6 +376,11 @@ export default function ImageAnalyzer() {
     // Set loading state while waiting for response
     setIsLoading(true);
     
+    // On mobile, switch to chat tab when sending a message
+    if (isMobileView) {
+      setActiveTab('chat');
+    }
+    
     try {
       // Check if WebSocket is connected first
       if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
@@ -411,15 +441,21 @@ export default function ImageAnalyzer() {
     setDetectedObjects([]);
     setMessages([]); // Clear messages when resetting
     setError(null);
+    setActiveTab('analysis'); // Reset to analysis tab
     // Keep threadId for conversation continuity
   };
 
+  // Toggle between tabs on mobile
+  const toggleTab = (tab) => {
+    console.log('Switching to tab:', tab);
+    setActiveTab(tab);
+  };
+
   return (
-   <div className={`min-h-screen flex flex-col`}>
+    <div className="min-h-screen flex flex-col">
       <main className="flex-1">
         {!image ? (
-          <div className="flex-1 w-full flex flex-col items-center justify-center p-6">
-            
+          <div className="flex-1 w-full flex flex-col items-center justify-center p-4 sm:p-6">
             {captureMode === "camera" ? (
               <div className="w-full max-w-3xl flex items-center justify-center h-full">
                 <CameraView onCapture={handleImageSource} />
@@ -433,9 +469,30 @@ export default function ImageAnalyzer() {
           </div>
         ) : (
           <div className="flex flex-col h-full min-h-screen">
+            {/* Mobile Tab Navigation */}
+            {isMobileView && (
+              <div className="flex w-full border-b sticky top-0  ">
+                <button 
+                  className={`flex-1 py-2 px-3 text-center font-medium ${activeTab === 'analysis' ? 'border-b-2 border-purple-500 text-purple-600' : 'text-gray-500'}`}
+                  onClick={() => toggleTab('analysis')}
+                >
+                  Analysis
+                </button>
+                <button 
+                  className={`flex-1 py-2 px-3 text-center font-medium ${activeTab === 'chat' ? 'border-b-2 border-purple-500 text-purple-600' : 'text-gray-500'}`}
+                  onClick={() => toggleTab('chat')}
+                >
+                  Chat
+                </button>
+              </div>
+            )}
             
-            <div className="flex flex-row flex-wrap md:flex-nowrap flex-1">
-              <div className="w-full md:w-1/2 p-4 overflow-auto">
+            {/* Main Content Container */}
+            <div className={`flex-1 ${isMobileView ? 'flex flex-col  mt-16' : 'grid grid-cols-1 md:grid-cols-2 gap-4'} p-2 sm:p-4`}>
+              {/* Analysis Display */}
+              <div 
+                className={`${isMobileView ? (activeTab === 'analysis' ? 'flex flex-col flex-1' : 'hidden') : 'flex flex-col'} overflow-auto`}
+              >
                 <AnalysisDisplay 
                   image={imageUrl || image} 
                   results={analysisResults} 
@@ -443,17 +500,21 @@ export default function ImageAnalyzer() {
                   isLoading={isLoading} 
                 />
                 
-                {/* Moved the button here to be closer to the analysis display */}
-                <div className="mt-4">
+                {/* Capture New Image button */}
+                <div className="mt-4 mb-2">
                   <button 
                     onClick={resetAnalysis}
-                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 w-full sm:w-auto"
                   >
                     Capture New Image
                   </button>
                 </div>
               </div>
-              <div className="w-full md:w-1/2 p-4 overflow-hidden flex flex-col">
+              
+              {/* Chat Interface */}
+              <div 
+                className={`${isMobileView ? (activeTab === 'chat' ? 'flex flex-col flex-1' : 'hidden') : 'flex flex-col'} h-[calc(100vh-200px)] md:h-auto overflow-hidden`}
+              >
                 <ChatInterface
                   messages={messages}
                   onSendMessage={sendMessage}
@@ -469,4 +530,3 @@ export default function ImageAnalyzer() {
     </div>
   );
 }
-

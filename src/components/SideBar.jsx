@@ -14,29 +14,27 @@ export default function Sidebar({ collapsed, setCollapsed }) {
   const location = useLocation()
   
   const handleNewSession = async () => {
-  const isSessionViewerPage = location.pathname.startsWith("/sessions/")
-  
-  if (isSessionViewerPage) {
-    navigate('/analysis')
-  } else {
     try {
+      // Always create a new session first
       if (sessionContext?.createNewSession) {
         await sessionContext.createNewSession()
       } else {
         console.error("createNewSession function is not available")
       }
+      
+      // Then navigate to /analysis regardless of current page
+      navigate('/analysis')
     } catch (error) {
-      // If there's a 409 error, the session context should handle it
-      // but we can add additional error handling here if needed
       console.error("Error creating new session:", error)
       
-      // We could automatically redirect to the active session if we know its ID
+      // Handle 409 conflict error (existing session)
       if (error.response?.status === 409 && error.response?.data?.existingThreadId) {
         sessionContext.setCurrentSessionId(error.response.data.existingThreadId)
+        // Still navigate to analysis after handling the conflict
+        navigate('/analysis')
       }
     }
   }
-}
   
   // Updated to toggle between "camera" and "upload" modes
   const handleToggleButton = () => {
