@@ -513,7 +513,7 @@ export default function ImageAnalyzer() {
               
               {/* Chat Interface */}
               <div 
-                className={`${isMobileView ? (activeTab === 'chat' ? 'flex flex-col flex-1' : 'hidden') : 'flex flex-col'} ${isMobileView ? 'max-h-[85vh]' : 'h-[calc(100vh-200px)]'} md:h-auto overflow-hidden`}
+                className={`${isMobileView ? (activeTab === 'chat' ? 'flex flex-col flex-1' : 'hidden') : 'flex flex-col'} ${isMobileView ? 'max-h-[84vh]' : 'h-[calc(100vh-200px)]'} md:h-auto overflow-hidden`}
               >
                 <ChatInterface
                   messages={messages}
